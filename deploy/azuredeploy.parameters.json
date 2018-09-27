@@ -24,7 +24,7 @@
                     "osDiskSku": "Premium_LRS",
                     "tags": {
                         "Environment": "Infra",
-                        "EnvironmentType": "Prd",
+                        "EnvironmentType": "Dev",
                         "Application": "Multiple VMs",
                         "TechnicalOwner": "geba@xylos.com",
                         "Importance": "low"
@@ -38,7 +38,7 @@
                     "osDiskSku": "Premium_LRS",
                     "tags": {
                         "Environment": "Infra",
-                        "EnvironmentType": "Prd",
+                        "EnvironmentType": "Dev",
                         "Application": "Multiple VMs",
                         "TechnicalOwner": "geba@xylos.com",
                         "Importance": "low"
@@ -52,7 +52,7 @@
         "tags": {
             "value": {
                 "Environment": "Infra",
-                "EnvironmentType": "Prd",
+                "EnvironmentType": "Dev",
                 "Application": "Multiple VMs",
                 "TechnicalOwner": "geba@xylos.com",
                 "Importance": "low"
