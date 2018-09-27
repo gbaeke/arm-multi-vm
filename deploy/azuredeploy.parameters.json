@@ -26,7 +26,8 @@
                         "Environment": "Infra",
                         "EnvironmentType": "Dev",
                         "Application": "Multiple VMs",
-                        "TechnicalOwner": "geba@xylos.com"
+                        "TechnicalOwner": "geba@xylos.com",
+                        "Importance": "low"
                     }
                 },
                 {
@@ -39,7 +40,8 @@
                         "Environment": "Infra",
                         "EnvironmentType": "Dev",
                         "Application": "Multiple VMs",
-                        "TechnicalOwner": "geba@xylos.com"
+                        "TechnicalOwner": "geba@xylos.com",
+                        "Importance": "low"
                     }
                 }
             ]
