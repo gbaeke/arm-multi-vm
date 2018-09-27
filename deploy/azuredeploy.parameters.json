@@ -1,0 +1,59 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualNetworkName": {
+            "value": "vnet-geba-youngsters"
+        },
+        "virtualNetworkResourceGroup": {
+            "value": "rg-geba-youngsters-vnet"
+        },
+        "subnetName": {
+            "value": "dev"
+        },
+        "availabilitySetName": {
+            "value": "geba-youngsters-as"
+        },
+        "virtualMachines": {
+            "value": [
+                {
+                    "name": "newvm01",
+                    "vmSize": "Standard_B2s",
+                    "sku": "2016-Datacenter-smalldisk",
+                    "osDiskSize": 64,
+                    "osDiskSku": "Premium_LRS",
+                    "tags": {
+                        "Environment": "Infra",
+                        "EnvironmentType": "Dev",
+                        "Application": "Multiple VMs",
+                        "TechnicalOwner": "geba@xylos.com"
+                    }
+                },
+                {
+                    "name": "newvm02",
+                    "vmSize": "Standard_B2s",
+                    "sku": "2016-Datacenter-smalldisk",
+                    "osDiskSize": 64,
+                    "osDiskSku": "Premium_LRS",
+                    "tags": {
+                        "Environment": "Infra",
+                        "EnvironmentType": "Dev",
+                        "Application": "Multiple VMs",
+                        "TechnicalOwner": "geba@xylos.com"
+                    }
+                }
+            ]
+        },
+        "localAdminUsername": {
+            "value": "XylosAdmin"
+        },
+        "tags": {
+            "value": {
+                "Environment": "Infra",
+                "EnvironmentType": "Dev",
+                "Application": "Multiple VMs",
+                "TechnicalOwner": "geba@xylos.com"
+            }
+        }
+    }
+}

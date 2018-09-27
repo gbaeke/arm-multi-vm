@@ -1,0 +1,191 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualNetworkName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the virtual Network"
+            }
+        },
+        "virtualNetworkResourceGroup": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Resource Group of the virtual Network"
+            }
+        },
+        "subnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the subnet where the VM's need to be connected"
+            }
+        },
+        "availabilitySetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Availability Set of the VMs"
+            }
+        },
+        "virtualMachines": {
+            "type": "array",
+            "metadata": {
+                "description": "Array, containing a list of all VM's to deploy"
+            }
+        },
+        "localAdminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "Local admin user"
+            }
+        },
+        "localAdminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Local admin password"
+            }
+        },
+        "tags": {
+            "type": "object",
+            "metadata": {
+                "description": "Tags that need to be assigned to all resources (except the VM), deployed in this template"
+            }
+        }
+    },
+    "variables": {
+        "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'vmdiag')]",
+        "vnetID": "[resourceId(parameters('virtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+        "subnetRef": "[concat(variables('vnetID'),'/subnets/', parameters('subnetName'))]",
+        "osPublisher": "MicrosoftWindowsServer",
+        "osOffer": "WindowsServer",
+        "domainJoinOptions": 3
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Compute/availabilitySets",
+            "name": "[parameters('availabilitySetName')]",
+            "apiVersion": "2017-12-01",
+            "location": "[resourceGroup().location]",
+            "tags": "[parameters('tags')]",
+            "properties": {
+                "platformFaultDomainCount": 2,
+                "platformUpdateDomainCount": 2
+            },
+            "sku": {
+                "name": "Aligned"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[variables('storageAccountName')]",
+            "apiVersion": "2016-01-01",
+            "location": "[resourceGroup().location]",
+            "tags": "[parameters('tags')]",
+            "sku": {
+                "name": "Standard_LRS"
+            },
+            "kind": "Storage",
+            "properties": {}
+        },
+        {
+            "name": "[concat(parameters('virtualMachines')[copyIndex()].name, '-pip')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2017-06-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic"
+            },
+            "copy": {
+                "name": "pipCopy",
+                "count": "[length(parameters('virtualMachines'))]"
+            }
+        },
+        {
+            "apiVersion": "2016-03-30",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[concat(parameters('virtualMachines')[copyIndex()].name, '-nic')]",
+            "location": "[resourceGroup().location]",
+            "tags": "[parameters('tags')]",
+            "copy": {
+                "name": "nicCopy",
+                "count": "[length(parameters('virtualMachines'))]"
+            },
+            "dependsOn": [
+                "pipCopy"    
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                            },
+                            "publicIpAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIpAddresses', concat(parameters('virtualMachines')[copyIndex()].name, '-pip'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "2017-03-30",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[parameters('virtualMachines')[copyIndex()].name]",
+            "location": "[resourceGroup().location]",
+            "tags": "[parameters('VirtualMachines')[copyIndex()].tags]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
+                "[concat('Microsoft.Compute/availabilitySets/', parameters('availabilitySetName'))]",
+                "nicCopy"
+            ],
+            "copy": {
+                "name": "vmCopy",
+                "count": "[length(parameters('virtualMachines'))]"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('virtualMachines')[copyIndex()].vmSize]"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('virtualMachines')[copyIndex()].name]",
+                    "adminUsername": "[parameters('localAdminUsername')]",
+                    "adminPassword": "[parameters('localAdminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[variables('osPublisher')]",
+                        "offer": "[variables('osOffer')]",
+                        "sku": "[parameters('virtualMachines')[copyIndex()].sku]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "createOption": "FromImage",
+                        "name": "[concat(parameters('virtualMachines')[copyIndex()].name, '-os')]",
+                        "diskSizeGB": "[parameters('virtualMachines')[copyIndex()].osDiskSize]",
+                        "managedDisk": {
+                            "storageAccountType": "[parameters('virtualMachines')[copyIndex()].osDiskSku]"
+                        }
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('virtualMachines')[copyIndex()].name, '-nic'))]"
+                        }
+                    ]
+                },
+                "availabilitySet": {
+                    "id": "[resourceId('Microsoft.Compute/availabilitySets',parameters('availabilitySetName'))]"
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true,
+                        "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))).primaryEndpoints.blob]"
+                    }
+                }
+            }
+        }
+    ]
+}
